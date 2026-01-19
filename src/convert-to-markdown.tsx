@@ -72,30 +72,48 @@ function convertToMarkdown(html: string): string {
   return turndownService.turndown(html);
 }
 
+/**
+ * Checks if a string contains HTML tags
+ */
+function looksLikeHtml(text: string): boolean {
+  const htmlTagPattern = /<\s*([a-z][a-z0-9]*)\b[^>]*>/i;
+  return htmlTagPattern.test(text);
+}
+
 export default async function Command() {
   try {
     // Read clipboard content
     const clipboardContent = await Clipboard.read();
 
-    // Check if HTML content is available
-    if (!clipboardContent.html) {
-      // Fallback: if no HTML, check for plain text
-      if (clipboardContent.text) {
-        await showHUD("⚠️ No rich text found - clipboard contains plain text only");
-        return;
-      }
+    let htmlContent: string | undefined;
 
-      // No content at all
-      await showToast({
-        style: Toast.Style.Failure,
-        title: "Empty Clipboard",
-        message: "Please copy some rich text content first",
-      });
+    // Check if HTML content is available as rich format
+    if (clipboardContent.html) {
+      htmlContent = clipboardContent.html;
+    }
+    // Smart fallback: check if plain text contains HTML tags
+    else if (clipboardContent.text && looksLikeHtml(clipboardContent.text)) {
+      htmlContent = clipboardContent.text;
+      await showHUD("🔍 Detected HTML in plain text, converting...");
+    }
+    // No HTML found anywhere
+    else {
+      if (clipboardContent.text) {
+        await showHUD(
+          "⚠️ No rich text or HTML found - clipboard contains plain text only",
+        );
+      } else {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Empty Clipboard",
+          message: "Please copy some rich text content first",
+        });
+      }
       return;
     }
 
     // Clean the HTML
-    const cleanedHtml = cleanHtml(clipboardContent.html);
+    const cleanedHtml = cleanHtml(htmlContent);
 
     // Convert to Markdown
     const markdown = convertToMarkdown(cleanedHtml);
@@ -111,7 +129,8 @@ export default async function Command() {
     await showToast({
       style: Toast.Style.Failure,
       title: "Conversion Failed",
-      message: error instanceof Error ? error.message : "Unknown error occurred",
+      message:
+        error instanceof Error ? error.message : "Unknown error occurred",
     });
   }
 }
