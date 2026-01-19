@@ -284,7 +284,6 @@ function cleanHtmlLightweight(html: string): string {
   let cleaned = html;
   
   // Step 1: Clean table cells - remove nested p and span tags inside td/th
-  // This is critical for Turndown to recognize tables properly
   cleaned = cleaned.replace(/<(td|th)([^>]*)>(.*?)<\/\1>/gis, (match, tag, attrs, content) => {
     // Remove p and span tags from cell content but keep the text
     const cleanedContent = content
@@ -297,12 +296,32 @@ function cleanHtmlLightweight(html: string): string {
     return `<${tag}>${cleanedContent}</${tag}>`;
   });
   
-  // Step 2: Remove attributes
-  cleaned = cleaned.replace(/\s+(style|class|id|dir)="[^"]*"/gi, "");
-  cleaned = cleaned.replace(/\s+data-[a-z-]+="[^"]*"/gi, "");
+  // Step 2: Convert first row of each table to headers (th tags and thead wrapper)
+  // Turndown's GFM plugin requires this structure to recognize tables
+  cleaned = cleaned.replace(/<table[^>]*>(.*?)<\/table>/gis, (match, tableContent) => {
+    // Remove colgroup first
+    const withoutColgroup = tableContent.replace(/<colgroup>.*?<\/colgroup>/gis, "");
+    
+    // Find first row and convert td to th
+    const withHeaders = withoutColgroup.replace(
+      /(<tbody[^>]*>)?\s*<tr[^>]*>(.*?)<\/tr>/is,
+      (rowMatch, tbody, firstRowContent) => {
+        // Convert all td to th in first row
+        const headerRow = firstRowContent
+          .replace(/<td>/gi, "<th>")
+          .replace(/<\/td>/gi, "</th>");
+        
+        // Wrap in thead
+        return `<thead><tr>${headerRow}</tr></thead><tbody>`;
+      }
+    );
+    
+    return `<table>${withHeaders}</table>`;
+  });
   
-  // Step 3: Remove colgroup (not needed for Markdown)
-  cleaned = cleaned.replace(/<colgroup>.*?<\/colgroup>/gis, "");
+  // Step 3: Remove attributes
+  cleaned = cleaned.replace(/\s+(style|class|id|dir|width)="[^"]*"/gi, "");
+  cleaned = cleaned.replace(/\s+data-[a-z-]+="[^"]*"/gi, "");
   
   // Step 4: Remove div tags (keep content)
   cleaned = cleaned.replace(/<div[^>]*>/gi, "").replace(/<\/div>/gi, "\n");
