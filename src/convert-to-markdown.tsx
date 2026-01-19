@@ -118,6 +118,53 @@ function looksLikeHtml(text: string): boolean {
   return htmlTagPattern.test(text);
 }
 
+/**
+ * Detects if text is tab-separated values (TSV) from a spreadsheet
+ */
+function isTsvContent(text: string): boolean {
+  const lines = text.trim().split("\n");
+  if (lines.length < 2) return false;
+  
+  // Check if at least 2 lines have tabs
+  const linesWithTabs = lines.filter((line) => line.includes("\t")).length;
+  return linesWithTabs >= 2;
+}
+
+/**
+ * Converts TSV (tab-separated values) to HTML table with first row as headers
+ */
+function tsvToHtmlTable(tsv: string): string {
+  const lines = tsv.trim().split("\n");
+  if (lines.length === 0) return "";
+  
+  let html = '<table>\n';
+  
+  // First row as headers
+  const headerCells = lines[0].split("\t");
+  html += '<thead>\n<tr>\n';
+  headerCells.forEach((cell) => {
+    html += `<th>${cell.trim()}</th>\n`;
+  });
+  html += '</tr>\n</thead>\n';
+  
+  // Rest of the rows as data
+  if (lines.length > 1) {
+    html += '<tbody>\n';
+    for (let i = 1; i < lines.length; i++) {
+      const cells = lines[i].split("\t");
+      html += '<tr>\n';
+      cells.forEach((cell) => {
+        html += `<td>${cell.trim()}</td>\n`;
+      });
+      html += '</tr>\n';
+    }
+    html += '</tbody>\n';
+  }
+  
+  html += '</table>';
+  return html;
+}
+
 export default async function Command() {
   try {
     // Read clipboard content
@@ -143,12 +190,17 @@ export default async function Command() {
     else if (clipboardContent.text && looksLikeHtml(clipboardContent.text)) {
       htmlContent = clipboardContent.text;
       console.log("Detected HTML in plain text");
-      await showHUD("🔍 Detected HTML in plain text, converting...");
+    }
+    // Spreadsheet fallback: check if plain text is TSV (tab-separated values)
+    else if (clipboardContent.text && isTsvContent(clipboardContent.text)) {
+      console.log("Detected TSV content from spreadsheet");
+      htmlContent = tsvToHtmlTable(clipboardContent.text);
+      await showHUD("📊 Detected spreadsheet data, converting to Markdown...");
     }
     // No HTML found anywhere
     else {
       if (clipboardContent.text) {
-        console.log("Plain text only, no HTML detected");
+        console.log("Plain text only, no HTML or TSV detected");
         console.log("Text preview:", clipboardContent.text.substring(0, 200));
         await showHUD(
           "⚠️ No rich text or HTML found - clipboard contains plain text only",
