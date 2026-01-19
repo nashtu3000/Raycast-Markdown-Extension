@@ -305,8 +305,8 @@ function cleanHtmlLightweight(html: string): string {
   cleaned = cleaned.replace(/<td>\s*/gi, "<td>");
   cleaned = cleaned.replace(/\s*<\/td>/gi, "</td>");
   
-  // Step 5: Add table headers - find first tr and convert its td to th
-  cleaned = cleaned.replace(/<table><tbody><tr>(.*?)<\/tr>/is, (match, firstRow) => {
+  // Step 5: Add table headers - find first tr in EACH table and convert its td to th
+  cleaned = cleaned.replace(/<table><tbody><tr>(.*?)<\/tr>/gis, (match, firstRow) => {
     const headerRow = firstRow.replace(/<td>/gi, "<th>").replace(/<\/td>/gi, "</th>");
     return `<table><thead><tr>${headerRow}</tr></thead><tbody>`;
   });
@@ -320,13 +320,13 @@ function cleanHtmlLightweight(html: string): string {
  */
 function cleanHtml(html: string): string {
   const htmlSize = html.length;
-  console.log(`\n=== Processing HTML: ${(htmlSize / 1024).toFixed(1)} KB ===`);
+  console.log(`\n=== [v2026.01.20-FIXED] Processing HTML: ${(htmlSize / 1024).toFixed(1)} KB ===`);
   
   // ALWAYS use lightweight cleaning for Google Docs HTML (it's always messy)
   // Cheerio is too memory intensive and the lightweight version works fine
   const cleaned = cleanHtmlLightweight(html);
   
-  console.log(`=== Cleaning complete, output size: ${(cleaned.length / 1024).toFixed(1)} KB ===\n`);
+  console.log(`=== [v2026.01.20-FIXED] Cleaning complete, output size: ${(cleaned.length / 1024).toFixed(1)} KB ===\n`);
   return cleaned;
 }
 
