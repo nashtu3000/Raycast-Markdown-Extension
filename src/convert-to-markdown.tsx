@@ -37,43 +37,30 @@ function convertFirstRowToHeaders(html: string): string {
 }
 
 /**
- * Cleans HTML content by removing inline styles and non-semantic wrapper elements
- * while preserving the actual document structure.
+ * Extracts content from wrapper divs and removes inline styles
  */
 function cleanHtml(html: string): string {
   let cleaned = html;
   
-  // Remove all inline style attributes
+  // Extract content from common wrapper patterns (markdown preview, etc.)
+  // Match wrapper div and extract everything between opening and closing
+  const wrapperPattern = /<div[^>]*(?:id|class)=["'][^"']*(?:output|preview|container|markdown-body)[^"']*["'][^>]*>([\s\S]*)<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*$/i;
+  const match = cleaned.match(wrapperPattern);
+  if (match) {
+    cleaned = match[1]; // Extract the inner content
+  }
+  
+  // Remove inline style attributes  
   cleaned = cleaned.replace(/\s+style="[^"]*"/gi, "");
   cleaned = cleaned.replace(/\s+style='[^']*'/gi, "");
   
   // Remove class attributes
   cleaned = cleaned.replace(/\s+class="[^"]*"/gi, "");
-  cleaned = cleaned.replace(/\s+class='[^']*'/gi, "");
   
   // Remove data attributes
   cleaned = cleaned.replace(/\s+data-[a-z-]+="[^"]*"/gi, "");
   
-  // Remove common wrapper/preview divs (but keep semantic divs)
-  cleaned = cleaned.replace(/<div[^>]*?\s+id=["'](container|preview|preview-wrapper|output)["'][^>]*?>/gi, "");
-  
-  // Remove empty divs but be careful not to remove too much
-  // Only remove divs that are purely wrapper/structural
-  const lines = cleaned.split("\n");
-  const filteredLines = lines.filter((line) => {
-    const trimmed = line.trim();
-    // Remove closing div tags that were wrapping content
-    if (trimmed === "</div>") {
-      return false;
-    }
-    // Remove empty opening div tags
-    if (trimmed.match(/^<div[^>]*>\s*$/)) {
-      return false;
-    }
-    return true;
-  });
-  
-  return filteredLines.join("\n");
+  return cleaned.trim();
 }
 
 /**
