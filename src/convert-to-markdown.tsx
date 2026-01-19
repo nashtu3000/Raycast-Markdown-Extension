@@ -38,50 +38,27 @@ function convertFirstRowToHeaders(html: string): string {
 }
 
 /**
- * Cleans HTML content by removing unwanted tags, attributes, and inline styles
- * while preserving the document structure.
+ * Cleans HTML content by removing unwanted attributes and inline styles
+ * while preserving the document structure. Uses a light touch to avoid corrupting structure.
  */
 function cleanHtml(html: string): string {
   return sanitizeHtml(html, {
-    allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-      "h5",
-      "h6",
-      "img",
-      "table",
-      "thead",
-      "tbody",
-      "tfoot",
-      "tr",
-      "th",
-      "td",
-      "pre",
-      "code",
-      "span",
-      "div",
-      "del",
-      "ins",
-      "colgroup",
-      "col",
-      "caption",
-    ]),
+    // Allow almost all common HTML tags to preserve structure
+    allowedTags: false, // Allow all tags
     allowedAttributes: {
       a: ["href", "title"],
       img: ["src", "alt", "title"],
-      th: ["align"],
-      td: ["align"],
+      table: ["border", "cellspacing", "cellpadding"],
+      th: ["align", "colspan", "rowspan"],
+      td: ["align", "colspan", "rowspan"],
       col: ["width"],
-      "*": ["class"],
     },
-    // Remove inline styles but keep structure
+    // Remove inline styles completely
     allowedStyles: {},
-    // Preserve text content
+    // Remove certain problematic attributes
+    disallowedTagsMode: "discard",
+    // Preserve text content exactly
     textFilter: (text) => text,
-    // Keep empty elements that might be meaningful
-    nonBooleanAttributes: ["abbr", "accept", "accept-charset"],
   });
 }
 
