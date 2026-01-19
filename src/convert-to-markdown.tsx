@@ -283,23 +283,33 @@ function convertFirstRowToHeaders(html: string): string {
 function cleanHtmlLightweight(html: string): string {
   let cleaned = html;
   
-  // Remove inline styles
-  cleaned = cleaned.replace(/\s+style="[^"]*"/gi, "");
+  // Step 1: Clean table cells - remove nested p and span tags inside td/th
+  // This is critical for Turndown to recognize tables properly
+  cleaned = cleaned.replace(/<(td|th)([^>]*)>(.*?)<\/\1>/gis, (match, tag, attrs, content) => {
+    // Remove p and span tags from cell content but keep the text
+    const cleanedContent = content
+      .replace(/<p[^>]*>/gi, "")
+      .replace(/<\/p>/gi, " ")
+      .replace(/<span[^>]*>/gi, "")
+      .replace(/<\/span>/gi, "")
+      .replace(/<br[^>]*>/gi, " ")
+      .trim();
+    return `<${tag}>${cleanedContent}</${tag}>`;
+  });
   
-  // Remove classes
-  cleaned = cleaned.replace(/\s+class="[^"]*"/gi, "");
-  
-  // Remove data attributes
+  // Step 2: Remove attributes
+  cleaned = cleaned.replace(/\s+(style|class|id|dir)="[^"]*"/gi, "");
   cleaned = cleaned.replace(/\s+data-[a-z-]+="[^"]*"/gi, "");
   
-  // Remove id attributes  
-  cleaned = cleaned.replace(/\s+id="[^"]*"/gi, "");
+  // Step 3: Remove colgroup (not needed for Markdown)
+  cleaned = cleaned.replace(/<colgroup>.*?<\/colgroup>/gis, "");
   
-  // Remove div tags (keep content)
+  // Step 4: Remove div tags (keep content)
   cleaned = cleaned.replace(/<div[^>]*>/gi, "").replace(/<\/div>/gi, "\n");
   
-  // Remove empty spans
+  // Step 5: Remove empty/useless spans
   cleaned = cleaned.replace(/<span[^>]*>\s*<\/span>/gi, "");
+  cleaned = cleaned.replace(/<span>/gi, "").replace(/<\/span>/gi, "");
   
   return cleaned.trim();
 }
