@@ -1,6 +1,8 @@
-import { Clipboard, showHUD, showToast, Toast } from "@raycast/api";
+import { Clipboard, showHUD, showToast, Toast, environment } from "@raycast/api";
 import TurndownService from "turndown";
 import { gfm } from "turndown-plugin-gfm";
+import { writeFileSync } from "fs";
+import { join } from "path";
 
 /**
  * Detects if HTML looks like it's from a spreadsheet (Google Sheets, Excel, etc.)
@@ -206,6 +208,15 @@ export default async function Command() {
 
     // Clean the HTML
     const cleanedHtml = cleanHtml(processedHtml);
+    
+    // DEBUG: Save cleaned HTML to temp file for inspection
+    try {
+      const debugPath = join(environment.supportPath, "debug-cleaned.html");
+      writeFileSync(debugPath, cleanedHtml, "utf-8");
+      console.log("Saved cleaned HTML to:", debugPath);
+    } catch (e) {
+      console.log("Could not save debug file:", e);
+    }
     
     console.log("Cleaned HTML preview:", cleanedHtml.substring(0, 500));
 
