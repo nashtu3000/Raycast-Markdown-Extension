@@ -61,8 +61,12 @@ function unwrapLayoutTables($: cheerio.CheerioAPI): void {
   // Process tables from innermost to outermost (to handle nested tables)
   const tables = $("table").toArray().reverse();
   
+  let layoutTablesUnwrapped = 0;
+  let dataTablesPreserved = 0;
+  
   tables.forEach((table) => {
     if (isLayoutTable($, table)) {
+      layoutTablesUnwrapped++;
       const $table = $(table);
       
       // Simply unwrap: remove the table element but keep all its descendants
@@ -81,8 +85,12 @@ function unwrapLayoutTables($: cheerio.CheerioAPI): void {
       
       // Finally, unwrap the table itself
       $table.replaceWith($table.children());
+    } else {
+      dataTablesPreserved++;
     }
   });
+  
+  console.log(`Table analysis: ${layoutTablesUnwrapped} layout tables unwrapped, ${dataTablesPreserved} data tables preserved`);
 }
 
 /**
@@ -143,6 +151,10 @@ function convertDataTablesToMarkdown($: cheerio.CheerioAPI): void {
   // Initialize cheerio-tableparser
   cheerioTableparser.default($);
   
+  const tablesFound = $("table").length;
+  let tablesConverted = 0;
+  let tablesFailed = 0;
+  
   $("table").each((i, table) => {
     const $table = $(table);
     
@@ -153,16 +165,22 @@ function convertDataTablesToMarkdown($: cheerio.CheerioAPI): void {
       // Transpose from column-major to row-major
       const rows = transposeTable(data);
       
+      console.log(`Table ${i + 1}: ${rows.length} rows x ${rows[0]?.length || 0} columns`);
+      
       // Render as Markdown table
       const mdTable = renderMarkdownTable(rows);
       
       // Replace with a special marker that Turndown won't process
       $table.replaceWith(`<pre data-md-table="true">${mdTable}</pre>`);
+      tablesConverted++;
     } catch (error) {
-      console.error("Error parsing table:", error);
+      console.error(`Error parsing table ${i + 1}:`, error);
+      tablesFailed++;
       // Leave table as-is if parsing fails
     }
   });
+  
+  console.log(`Converted ${tablesConverted}/${tablesFound} tables to Markdown (${tablesFailed} failed)`);
 }
 
 /**
