@@ -205,10 +205,9 @@ function needsStyleConversion(html: string): boolean {
 /**
  * Converts inline style-based and class-based styling to semantic HTML
  * Handles both Google Docs class patterns and inline font-weight styles
+ * Memory-optimized: processes DOM directly without creating new cheerio instances
  */
-function convertStylesToSemanticHtml(html: string): string {
-  const $ = cheerio.load(html, { xml: false });
-  
+function convertStylesToSemanticHtml($: cheerio.CheerioAPI): void {
   // Process all spans to detect bold text from styles or classes
   $("span").each((_, span) => {
     const $span = $(span);
@@ -241,8 +240,6 @@ function convertStylesToSemanticHtml(html: string): string {
       $span.replaceWith(content || "");
     }
   });
-  
-  return $.html();
 }
 
 /**
@@ -283,20 +280,20 @@ function convertFirstRowToHeaders(html: string): string {
  * Cleans HTML using Cheerio for proper DOM manipulation
  * Detects and unwraps layout tables, converts data tables to Markdown
  * Removes wrapper divs, inline styles, and non-semantic attributes
+ * Memory-optimized: single Cheerio instance
  */
 function cleanHtml(html: string): string {
   try {
-    // STEP 0: Convert inline styles and classes to semantic HTML
-    let processedHtml = html;
-    if (needsStyleConversion(html)) {
-      console.log("Detected styled HTML, converting to semantic tags");
-      processedHtml = convertStylesToSemanticHtml(html);
-    }
-    
-    // Load HTML with Cheerio (jQuery-like API for Node.js)
-    const $ = cheerio.load(processedHtml, {
+    // Load HTML with Cheerio once (jQuery-like API for Node.js)
+    const $ = cheerio.load(html, {
       xml: false,
     });
+    
+    // STEP 0: Convert inline styles and classes to semantic HTML (in-place)
+    if (needsStyleConversion(html)) {
+      console.log("Detected styled HTML, converting to semantic tags");
+      convertStylesToSemanticHtml($);
+    }
     
     // STEP 1: Unwrap layout tables (Google Docs wraps everything in tables)
     unwrapLayoutTables($);
