@@ -326,20 +326,21 @@ function cleanHtmlLightweight(html: string): string {
 
 /**
  * Cleans HTML using Cheerio for proper DOM manipulation
- * For large documents, uses lightweight regex processing
+ * For large documents or on errors, uses lightweight regex processing
  */
 function cleanHtml(html: string): string {
+  const htmlSize = html.length;
+  console.log(`Processing HTML: ${(htmlSize / 1024).toFixed(1)} KB`);
+  
+  // Always use lightweight for documents >200KB to avoid OOM
+  if (htmlSize > 200 * 1024) {
+    console.log("Large document - using lightweight cleaning");
+    return cleanHtmlLightweight(html);
+  }
+  
   try {
-    const htmlSize = html.length;
-    console.log(`Processing HTML: ${(htmlSize / 1024).toFixed(1)} KB`);
-    
-    // For large HTML (>300KB), use lightweight regex processing to avoid OOM
-    if (htmlSize > 300 * 1024) {
-      console.log("Large document - using lightweight regex cleaning");
-      return cleanHtmlLightweight(html);
-    }
-    
-    // Normal processing for smaller documents
+    // Try Cheerio processing for smaller documents
+    console.log("Using Cheerio processing");
     const $ = cheerio.load(html, { xml: false });
     
     if (needsStyleConversion(html)) {
@@ -354,9 +355,11 @@ function cleanHtml(html: string): string {
     $("div").each((_, elem) => $(elem).replaceWith($(elem).html() || ""));
     $("*").removeAttr("style").removeAttr("class").removeAttr("id");
     
-    return $.html().trim();
+    const result = $.html().trim();
+    console.log("Cheerio processing complete");
+    return result;
   } catch (error) {
-    console.error("Error in cleanHtml:", error);
+    console.error("Cheerio failed, falling back to lightweight:", error);
     return cleanHtmlLightweight(html);
   }
 }
