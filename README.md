@@ -87,11 +87,11 @@ This extension uses:
 5. **Cleaning**: Removes unnecessary attributes, classes, and wrapper elements
 6. **Markdown Generation**: Turndown converts clean HTML to GitHub Flavored Markdown
 
-## Installation
+## 📥 Installation
 
-### For Personal Use (Mac or Windows)
+### For Personal Use (Permanent Installation)
 
-1. **Clone or download this repository:**
+1. **Clone this repository:**
    ```bash
    git clone https://github.com/nashtu3000/raycast-extension.git
    cd raycast-extension
@@ -103,25 +103,56 @@ This extension uses:
    ```
 
 3. **Import into Raycast (One-Time Setup):**
-   - Open Raycast
-   - Go to **Settings** → **Extensions** tab
-   - Click the **⋮** menu (three dots) in the top right
+   - Open **Raycast**
+   - Go to **Raycast Settings** (Cmd+,)
+   - Click **Extensions** tab
+   - Click the **⋮** menu (three dots) in the top right corner
    - Select **"Import Extension"**
-   - Navigate to the `raycast-extension` folder
+   - Navigate to your `raycast-extension` folder
    - Click **Import**
 
-4. **Done!** The extension is now permanently installed. You don't need to keep any terminal running.
+4. **You're done!** 🎉 The extension is now permanently installed. You can close the terminal - it will keep working.
 
-### For Development (Testing Changes)
+### Sharing with Friends
 
-If you want to modify the code and test it:
+To share this extension with friends or colleagues:
+
+1. **Share the GitHub repository link**: `https://github.com/nashtu3000/raycast-extension`
+2. They follow the installation steps above
+3. That's it! No publishing to the store required for private use.
+
+### For Development (Live Testing)
+
+If you want to modify the code and test changes:
 
 ```bash
 npm run dev
 ```
 
-This starts a development server that auto-reloads when you make changes. Press `Ctrl+C` to stop.
+This starts a development server that auto-reloads on file changes. Press `Ctrl+C` to stop.
 
-## License
+## 🐛 Troubleshooting
+
+### No tables appearing in output?
+- **Make sure you copied FROM Google Docs in a browser** (Chrome/Safari)
+- Try: File → Download → Web Page (.html) → Open in browser → Copy from there
+
+### Memory errors with very large documents?
+- The extension is optimized for documents up to ~1MB
+- For larger docs, try copying smaller sections at a time
+
+### Plain text instead of Markdown?
+- The source must provide HTML when copying
+- Google Docs works best in Chrome/Safari
+- Try copying from the downloaded HTML file as a workaround
+
+## 📄 License
 
 MIT
+
+## ⭐ Credits
+
+Built with:
+- [Turndown](https://github.com/mixmark-io/turndown) - HTML to Markdown conversion
+- [Cheerio](https://cheerio.js.org/) - HTML parsing and manipulation
+- [Raycast API](https://developers.raycast.com/) - Extension framework
