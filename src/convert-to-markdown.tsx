@@ -38,19 +38,21 @@ function unwrapLayoutTables($: cheerio.CheerioAPI): void {
     if (isLayoutTable($, table)) {
       const $table = $(table);
       
-      // Get all the HTML from inside the table, preserving structure
-      // We want to keep all the semantic elements (p, h1-h6, ul, ol, etc.)
-      const innerHTML = $table.html() || "";
+      // Extract all content from table cells while preserving HTML structure
+      // Use Cheerio to properly handle DOM nodes, not string manipulation
+      const $replacement = $("<div></div>");
       
-      // Remove table structure tags but keep the content
-      const cleanedContent = innerHTML
-        .replace(/<\/?tbody[^>]*>/gi, "\n")
-        .replace(/<\/?thead[^>]*>/gi, "\n")
-        .replace(/<\/?tr[^>]*>/gi, "\n")
-        .replace(/<\/?td[^>]*>/gi, "")
-        .replace(/<\/?th[^>]*>/gi, "");
+      $table.find("td, th").each((_, cell) => {
+        // Append each cell's children (not the cell itself) to the replacement div
+        $(cell).contents().each((_, node) => {
+          $replacement.append($(node).clone());
+        });
+        // Add a line break between cells for spacing
+        $replacement.append("\n");
+      });
       
-      $table.replaceWith(cleanedContent);
+      // Replace the table with the extracted content
+      $table.replaceWith($replacement.html() || "");
     }
   });
 }
