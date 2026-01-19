@@ -392,8 +392,8 @@ function looksLikeHtml(text: string): boolean {
 }
 
 /**
- * Detects if text is tab-separated values (TSV) from a spreadsheet
- * Must be strict to avoid false positives with formatted documents
+ * Detects if text contains tables with tab-separated values
+ * Relaxed detection to work with Google Docs plain text exports
  */
 function isTsvContent(text: string): boolean {
   const lines = text.trim().split("\n");
@@ -402,37 +402,86 @@ function isTsvContent(text: string): boolean {
   // Count lines with tabs
   const linesWithTabs = lines.filter((line) => line.includes("\t"));
   
-  // For TSV detection, we need:
-  // 1. At least 50% of lines have tabs (consistent structure)
-  // 2. Lines are relatively short (not paragraphs)
-  // 3. Consistent number of tabs per line (table-like structure)
+  // Need at least 2 lines with tabs to be considered a table
+  if (linesWithTabs.length < 2) return false;
   
-  if (linesWithTabs.length < lines.length * 0.5) {
-    return false; // Less than 50% of lines have tabs
+  // Check if there are multiple consecutive lines with tabs (table rows)
+  let consecutiveTabbedLines = 0;
+  let maxConsecutive = 0;
+  
+  for (const line of lines) {
+    if (line.includes("\t")) {
+      consecutiveTabbedLines++;
+      maxConsecutive = Math.max(maxConsecutive, consecutiveTabbedLines);
+    } else {
+      consecutiveTabbedLines = 0;
+    }
   }
   
-  // Check if lines are short (spreadsheet cells are typically < 200 chars)
-  const avgLineLength = text.length / lines.length;
-  if (avgLineLength > 200) {
-    return false; // Too long for spreadsheet data
-  }
-  
-  // Check consistency: do most lines have similar tab counts?
-  const tabCounts = linesWithTabs.map((line) => (line.match(/\t/g) || []).length);
-  if (tabCounts.length < 2) return false;
-  
-  const avgTabs = tabCounts.reduce((a, b) => a + b, 0) / tabCounts.length;
-  const consistentTabs = tabCounts.filter((count) => Math.abs(count - avgTabs) <= 1).length;
-  
-  // At least 80% of lines should have similar tab counts
-  return consistentTabs >= tabCounts.length * 0.8;
+  // If we have at least 2 consecutive tabbed lines, it's likely a table
+  return maxConsecutive >= 2;
 }
 
 /**
- * Converts TSV (tab-separated values) to HTML table with first row as headers
+ * Converts mixed content with embedded TSV tables to HTML
+ * Handles Google Docs plain text exports with tables
  */
-function tsvToHtmlTable(tsv: string): string {
-  const lines = tsv.trim().split("\n");
+function convertMixedTsvToHtml(text: string): string {
+  const lines = text.split("\n");
+  let html = "";
+  let inTable = false;
+  let tableLines: string[] = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const hasTab = line.includes("\t");
+    
+    // Check if next line also has tabs (table continues)
+    const nextHasTab = i < lines.length - 1 && lines[i + 1].includes("\t");
+    
+    if (hasTab) {
+      // We're in a table
+      if (!inTable) {
+        inTable = true;
+        tableLines = [];
+      }
+      tableLines.push(line);
+      
+      // If next line doesn't have tabs, close the table
+      if (!nextHasTab) {
+        html += convertTableLinesToHtml(tableLines);
+        inTable = false;
+        tableLines = [];
+      }
+    } else {
+      // Regular text line
+      if (line.trim()) {
+        // Try to detect headings from formatting patterns
+        if (line.match(/^\d+\.\s+[A-Z]/)) {
+          // Numbered heading like "1. Executive Summary"
+          html += `<h1>${escapeHtml(line.trim())}</h1>\n`;
+        } else if (line.match(/^\d+\.\d+\s+/)) {
+          // Sub-heading like "1.1 Core Methodology"
+          html += `<h2>${escapeHtml(line.trim())}</h2>\n`;
+        } else if (line.match(/^\d+\.\d+\.\d+\s+/)) {
+          // Sub-sub-heading like "1.1.1 Target Population"
+          html += `<h3>${escapeHtml(line.trim())}</h3>\n`;
+        } else {
+          html += `<p>${escapeHtml(line.trim())}</p>\n`;
+        }
+      } else {
+        html += `<p>&nbsp;</p>\n`;
+      }
+    }
+  }
+  
+  return html;
+}
+
+/**
+ * Converts a set of tab-separated lines to an HTML table
+ */
+function convertTableLinesToHtml(lines: string[]): string {
   if (lines.length === 0) return "";
   
   let html = '<table>\n';
@@ -441,7 +490,7 @@ function tsvToHtmlTable(tsv: string): string {
   const headerCells = lines[0].split("\t");
   html += '<thead>\n<tr>\n';
   headerCells.forEach((cell) => {
-    html += `<th>${cell.trim()}</th>\n`;
+    html += `<th>${escapeHtml(cell.trim())}</th>\n`;
   });
   html += '</tr>\n</thead>\n';
   
@@ -452,15 +501,27 @@ function tsvToHtmlTable(tsv: string): string {
       const cells = lines[i].split("\t");
       html += '<tr>\n';
       cells.forEach((cell) => {
-        html += `<td>${cell.trim()}</td>\n`;
+        html += `<td>${escapeHtml(cell.trim())}</td>\n`;
       });
       html += '</tr>\n';
     }
     html += '</tbody>\n';
   }
   
-  html += '</table>';
+  html += '</table>\n';
   return html;
+}
+
+/**
+ * Escapes HTML special characters
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 export default async function Command() {
@@ -489,11 +550,11 @@ export default async function Command() {
       htmlContent = clipboardContent.text;
       console.log("Detected HTML in plain text");
     }
-    // Spreadsheet fallback: check if plain text is TSV (tab-separated values)
+    // Spreadsheet/table fallback: check if plain text contains TSV (tab-separated values)
     else if (clipboardContent.text && isTsvContent(clipboardContent.text)) {
-      console.log("Detected TSV content from spreadsheet");
-      htmlContent = tsvToHtmlTable(clipboardContent.text);
-      await showHUD("📊 Detected spreadsheet data, converting to Markdown...");
+      console.log("Detected TSV/table content in plain text");
+      htmlContent = convertMixedTsvToHtml(clipboardContent.text);
+      await showHUD("📄 Converting formatted text with tables to Markdown...");
     }
     // No HTML found anywhere
     else {
