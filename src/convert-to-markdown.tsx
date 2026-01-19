@@ -386,9 +386,6 @@ function convertToMarkdown(html: string): string {
       return content;
     },
   });
-  
-  // Remove Turndown's default table handling - we handle tables ourselves
-  turndownService.remove(["table"]);
 
   // Custom rule: Preserve line breaks
   turndownService.addRule("preserveLineBreaks", {
