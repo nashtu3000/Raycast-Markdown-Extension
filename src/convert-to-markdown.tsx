@@ -1,7 +1,6 @@
 import { Clipboard, showHUD, showToast, Toast } from "@raycast/api";
 import TurndownService from "turndown";
 import { gfm } from "turndown-plugin-gfm";
-import sanitizeHtml from "sanitize-html";
 
 /**
  * Detects if HTML looks like it's from a spreadsheet (Google Sheets, Excel, etc.)
@@ -38,28 +37,31 @@ function convertFirstRowToHeaders(html: string): string {
 }
 
 /**
- * Cleans HTML content by removing unwanted attributes and inline styles
- * while preserving the document structure. Uses a light touch to avoid corrupting structure.
+ * Cleans HTML content by removing inline styles and problematic attributes
+ * while preserving the document structure. Uses regex for minimal impact.
  */
 function cleanHtml(html: string): string {
-  return sanitizeHtml(html, {
-    // Allow almost all common HTML tags to preserve structure
-    allowedTags: false, // Allow all tags
-    allowedAttributes: {
-      a: ["href", "title"],
-      img: ["src", "alt", "title"],
-      table: ["border", "cellspacing", "cellpadding"],
-      th: ["align", "colspan", "rowspan"],
-      td: ["align", "colspan", "rowspan"],
-      col: ["width"],
-    },
-    // Remove inline styles completely
-    allowedStyles: {},
-    // Remove certain problematic attributes
-    disallowedTagsMode: "discard",
-    // Preserve text content exactly
-    textFilter: (text) => text,
-  });
+  let cleaned = html;
+  
+  // Remove inline style attributes
+  cleaned = cleaned.replace(/\s+style="[^"]*"/gi, "");
+  cleaned = cleaned.replace(/\s+style='[^']*'/gi, "");
+  
+  // Remove class attributes (optional, keeps structure clean)
+  cleaned = cleaned.replace(/\s+class="[^"]*"/gi, "");
+  cleaned = cleaned.replace(/\s+class='[^']*'/gi, "");
+  
+  // Remove data attributes that aren't needed
+  cleaned = cleaned.replace(/\s+data-[a-z-]+="[^"]*"/gi, "");
+  
+  // Remove wrapper divs that don't add semantic meaning
+  cleaned = cleaned.replace(/<div[^>]*id="container"[^>]*>/gi, "");
+  cleaned = cleaned.replace(/<div[^>]*id="preview"[^>]*>/gi, "");
+  cleaned = cleaned.replace(/<div[^>]*id="preview-wrapper"[^>]*>/gi, "");
+  cleaned = cleaned.replace(/<div[^>]*id="output"[^>]*>/gi, "");
+  cleaned = cleaned.replace(/<\/div>/gi, "");
+  
+  return cleaned;
 }
 
 /**
