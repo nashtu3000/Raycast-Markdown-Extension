@@ -44,8 +44,15 @@ function convertFirstRowToHeaders(html: string): string {
  */
 function cleanHtml(html: string): string {
   try {
-    // Parse HTML with jsdom (minimal config to avoid resource loading errors)
-    const dom = new JSDOM(html);
+    // Parse HTML with jsdom - completely disable all resource loading
+    const dom = new JSDOM(html, {
+      url: "http://localhost",
+      contentType: "text/html",
+      includeNodeLocations: false,
+      storageQuota: 0,
+      pretendToBeVisual: false,
+      resources: undefined,
+    });
     const document = dom.window.document;
     
     // Remove all wrapper divs but keep their content
