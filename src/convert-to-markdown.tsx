@@ -311,14 +311,39 @@ function looksLikeHtml(text: string): boolean {
 
 /**
  * Detects if text is tab-separated values (TSV) from a spreadsheet
+ * Must be strict to avoid false positives with formatted documents
  */
 function isTsvContent(text: string): boolean {
   const lines = text.trim().split("\n");
   if (lines.length < 2) return false;
   
-  // Check if at least 2 lines have tabs
-  const linesWithTabs = lines.filter((line) => line.includes("\t")).length;
-  return linesWithTabs >= 2;
+  // Count lines with tabs
+  const linesWithTabs = lines.filter((line) => line.includes("\t"));
+  
+  // For TSV detection, we need:
+  // 1. At least 50% of lines have tabs (consistent structure)
+  // 2. Lines are relatively short (not paragraphs)
+  // 3. Consistent number of tabs per line (table-like structure)
+  
+  if (linesWithTabs.length < lines.length * 0.5) {
+    return false; // Less than 50% of lines have tabs
+  }
+  
+  // Check if lines are short (spreadsheet cells are typically < 200 chars)
+  const avgLineLength = text.length / lines.length;
+  if (avgLineLength > 200) {
+    return false; // Too long for spreadsheet data
+  }
+  
+  // Check consistency: do most lines have similar tab counts?
+  const tabCounts = linesWithTabs.map((line) => (line.match(/\t/g) || []).length);
+  if (tabCounts.length < 2) return false;
+  
+  const avgTabs = tabCounts.reduce((a, b) => a + b, 0) / tabCounts.length;
+  const consistentTabs = tabCounts.filter((count) => Math.abs(count - avgTabs) <= 1).length;
+  
+  // At least 80% of lines should have similar tab counts
+  return consistentTabs >= tabCounts.length * 0.8;
 }
 
 /**
