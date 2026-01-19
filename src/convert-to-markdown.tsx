@@ -277,18 +277,48 @@ function convertFirstRowToHeaders(html: string): string {
 }
 
 /**
+ * Lightweight HTML cleaning using regex for large documents
+ * Avoids memory issues with Cheerio on large HTML
+ */
+function cleanHtmlLightweight(html: string): string {
+  let cleaned = html;
+  
+  // Remove inline styles
+  cleaned = cleaned.replace(/\s+style="[^"]*"/gi, "");
+  
+  // Remove classes except from specific elements we need
+  cleaned = cleaned.replace(/\s+class="[^"]*"/gi, "");
+  
+  // Remove data attributes
+  cleaned = cleaned.replace(/\s+data-[a-z-]+="[^"]*"/gi, "");
+  
+  // Remove id attributes
+  cleaned = cleaned.replace(/\s+id="[^"]*"/gi, "");
+  
+  // Remove empty divs and spans
+  cleaned = cleaned.replace(/<(div|span)[^>]*>\s*<\/\1>/gi, "");
+  
+  return cleaned.trim();
+}
+
+/**
  * Cleans HTML using Cheerio for proper DOM manipulation
  * Detects and unwraps layout tables, converts data tables to Markdown
  * Removes wrapper divs, inline styles, and non-semantic attributes
- * Memory-optimized: single Cheerio instance
+ * Memory-optimized: uses lightweight processing for large documents
  */
 function cleanHtml(html: string): string {
   try {
     const htmlSize = html.length;
     console.log(`Processing HTML: ${(htmlSize / 1024).toFixed(1)} KB`);
     
-    // For very large HTML (>500KB), use lightweight processing to avoid OOM
-    const isLargeDocument = htmlSize > 500 * 1024;
+    // For very large HTML (>300KB), use lightweight regex processing to avoid OOM
+    const isLargeDocument = htmlSize > 300 * 1024;
+    
+    if (isLargeDocument) {
+      console.log("Large document detected - using lightweight processing");
+      return cleanHtmlLightweight(html);
+    }
     
     // Load HTML with Cheerio once (jQuery-like API for Node.js)
     const $ = cheerio.load(html, {
@@ -305,12 +335,7 @@ function cleanHtml(html: string): string {
     unwrapLayoutTables($);
     
     // STEP 2: Convert remaining data tables to Markdown
-    // Skip expensive cheerio-tableparser for large docs (let Turndown handle it)
-    if (!isLargeDocument) {
-      convertDataTablesToMarkdown($);
-    } else {
-      console.log("Large document - skipping tableparser, letting Turndown handle tables");
-    }
+    convertDataTablesToMarkdown($);
     
     // STEP 3: Remove all wrapper divs - unwrap their content but keep the children
     $("div").each((i, elem) => {
@@ -347,13 +372,8 @@ function cleanHtml(html: string): string {
     return $.html().trim();
   } catch (error) {
     console.error("Error cleaning HTML with Cheerio:", error);
-    // Fallback to basic regex cleaning
-    return html
-      .replace(/<div[^>]*>/gi, "")
-      .replace(/<\/div>/gi, "")
-      .replace(/\s+style="[^"]*"/gi, "")
-      .replace(/\s+class="[^"]*"/gi, "")
-      .trim();
+    // Fallback to lightweight cleaning
+    return cleanHtmlLightweight(html);
   }
 }
 
