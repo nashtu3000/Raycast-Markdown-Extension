@@ -37,18 +37,15 @@ function convertFirstRowToHeaders(html: string): string {
 }
 
 /**
- * Extracts content from wrapper divs and removes inline styles
+ * Removes wrapper divs and inline styles while preserving semantic content
  */
 function cleanHtml(html: string): string {
   let cleaned = html;
   
-  // Extract content from common wrapper patterns (markdown preview, etc.)
-  // Match wrapper div and extract everything between opening and closing
-  const wrapperPattern = /<div[^>]*(?:id|class)=["'][^"']*(?:output|preview|container|markdown-body)[^"']*["'][^>]*>([\s\S]*)<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*$/i;
-  const match = cleaned.match(wrapperPattern);
-  if (match) {
-    cleaned = match[1]; // Extract the inner content
-  }
+  // Remove ALL div tags (both opening and closing) since they're just wrappers
+  // Divs don't have semantic meaning, they're just containers
+  cleaned = cleaned.replace(/<div[^>]*>/gi, "");
+  cleaned = cleaned.replace(/<\/div>/gi, "");
   
   // Remove inline style attributes  
   cleaned = cleaned.replace(/\s+style="[^"]*"/gi, "");
@@ -59,6 +56,9 @@ function cleanHtml(html: string): string {
   
   // Remove data attributes
   cleaned = cleaned.replace(/\s+data-[a-z-]+="[^"]*"/gi, "");
+  
+  // Clean up extra whitespace
+  cleaned = cleaned.replace(/\n\s*\n\s*\n/g, "\n\n");
   
   return cleaned.trim();
 }
