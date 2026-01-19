@@ -13,8 +13,14 @@
   "commands": [
     {
       "name": "convert-to-markdown",
-      "title": "Convert Clipboard to Markdown",
-      "description": "Convert rich text/HTML from clipboard to Markdown",
+      "title": "Convert to Markdown (with Media)",
+      "description": "Convert rich text/HTML to Markdown, keeping images and media",
+      "mode": "no-view"
+    },
+    {
+      "name": "convert-to-plain-markdown",
+      "title": "Convert to Plain Markdown",
+      "description": "Convert rich text/HTML to Markdown, removing all images and media",
       "mode": "no-view"
     }
   ],

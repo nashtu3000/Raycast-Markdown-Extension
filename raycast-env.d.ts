@@ -15,10 +15,14 @@ declare type Preferences = ExtensionPreferences
 declare namespace Preferences {
   /** Preferences accessible in the `convert-to-markdown` command */
   export type ConvertToMarkdown = ExtensionPreferences & {}
+  /** Preferences accessible in the `convert-to-plain-markdown` command */
+  export type ConvertToPlainMarkdown = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
   /** Arguments passed to the `convert-to-markdown` command */
   export type ConvertToMarkdown = {}
+  /** Arguments passed to the `convert-to-plain-markdown` command */
+  export type ConvertToPlainMarkdown = {}
 }
 
