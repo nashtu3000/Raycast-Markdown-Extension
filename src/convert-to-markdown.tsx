@@ -316,43 +316,18 @@ function cleanHtmlLightweight(html: string): string {
 }
 
 /**
- * Cleans HTML using Cheerio for proper DOM manipulation
- * For large documents or on errors, uses lightweight regex processing
+ * Cleans HTML - ALWAYS use lightweight mode for Google Docs
  */
 function cleanHtml(html: string): string {
   const htmlSize = html.length;
-  console.log(`Processing HTML: ${(htmlSize / 1024).toFixed(1)} KB`);
+  console.log(`\n=== Processing HTML: ${(htmlSize / 1024).toFixed(1)} KB ===`);
   
-  // Always use lightweight for documents >200KB to avoid OOM
-  if (htmlSize > 200 * 1024) {
-    console.log("Large document - using lightweight cleaning");
-    return cleanHtmlLightweight(html);
-  }
+  // ALWAYS use lightweight cleaning for Google Docs HTML (it's always messy)
+  // Cheerio is too memory intensive and the lightweight version works fine
+  const cleaned = cleanHtmlLightweight(html);
   
-  try {
-    // Try Cheerio processing for smaller documents
-    console.log("Using Cheerio processing");
-    const $ = cheerio.load(html, { xml: false });
-    
-    if (needsStyleConversion(html)) {
-      console.log("Converting styles to semantic tags");
-      convertStylesToSemanticHtml($);
-    }
-    
-    unwrapLayoutTables($);
-    convertDataTablesToMarkdown($);
-    
-    // Clean attributes
-    $("div").each((_, elem) => $(elem).replaceWith($(elem).html() || ""));
-    $("*").removeAttr("style").removeAttr("class").removeAttr("id");
-    
-    const result = $.html().trim();
-    console.log("Cheerio processing complete");
-    return result;
-  } catch (error) {
-    console.error("Cheerio failed, falling back to lightweight:", error);
-    return cleanHtmlLightweight(html);
-  }
+  console.log(`=== Cleaning complete, output size: ${(cleaned.length / 1024).toFixed(1)} KB ===\n`);
+  return cleaned;
 }
 
 /**
