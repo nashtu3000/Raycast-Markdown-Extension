@@ -770,46 +770,66 @@ export default async function Command() {
         }
       } else if (platform === "win32") {
         // Windows: Use PowerShell to get HTML from clipboard
-        // The correct method is GetText('Html') which returns HTML as a string directly
-        try {
-          const psScript = `
+        // Write script to temp file to avoid escaping issues
+        const fs = require("fs");
+        const path = require("path");
+        const tempDir = os.tmpdir();
+        const scriptPath = path.join(tempDir, "raycast-get-clipboard.ps1");
+        const outputPath = path.join(tempDir, "raycast-clipboard-output.txt");
+        
+        const psScript = `
 Add-Type -AssemblyName System.Windows.Forms
-if ([System.Windows.Forms.Clipboard]::ContainsText([System.Windows.Forms.TextDataFormat]::Html)) {
-  [System.Windows.Forms.Clipboard]::GetText([System.Windows.Forms.TextDataFormat]::Html)
+$clip = [System.Windows.Forms.Clipboard]
+if ($clip::ContainsText([System.Windows.Forms.TextDataFormat]::Html)) {
+    $html = $clip::GetText([System.Windows.Forms.TextDataFormat]::Html)
+    [System.IO.File]::WriteAllText("${outputPath.replace(/\\/g, "\\\\")}", $html, [System.Text.Encoding]::UTF8)
 }
 `;
-          const result = execSync(`powershell -sta -NoProfile -Command "${psScript.replace(/"/g, '\\"').replace(/\r?\n/g, ' ')}"`, {
-            encoding: "utf-8",
+        try {
+          fs.writeFileSync(scriptPath, psScript, "utf-8");
+          
+          // Delete old output file if exists
+          try { fs.unlinkSync(outputPath); } catch (e) { /* ignore */ }
+          
+          execSync(`powershell -sta -NoProfile -ExecutionPolicy Bypass -File "${scriptPath}"`, {
             timeout: 10000,
-            maxBuffer: 10 * 1024 * 1024,
             windowsHide: true,
           });
           
-          console.log("Windows clipboard result length:", result?.length || 0);
-          
-          if (result && result.trim() && result.includes("<")) {
-            // Windows CF_HTML format includes a header - extract just the HTML
-            // Format: Version:0.9\r\nStartHTML:xxx\r\n...\r\n<html>...</html>
-            const htmlMatch = result.match(/<html[^>]*>[\s\S]*<\/html>/i);
-            if (htmlMatch) {
-              htmlContent = htmlMatch[0];
-              console.log(`Retrieved HTML from Windows clipboard (${htmlMatch[0].length} bytes)`);
-            } else {
-              // Try fragment markers (Google Docs uses these)
-              const fragmentMatch = result.match(/<!--StartFragment-->([\s\S]*?)<!--EndFragment-->/i);
-              if (fragmentMatch) {
-                htmlContent = fragmentMatch[1];
-                console.log(`Retrieved HTML fragment from Windows clipboard (${fragmentMatch[1].length} bytes)`);
+          // Read the output file
+          if (fs.existsSync(outputPath)) {
+            const result = fs.readFileSync(outputPath, "utf-8");
+            console.log("Windows clipboard result length:", result?.length || 0);
+            
+            if (result && result.includes("<")) {
+              // Windows CF_HTML format includes a header - extract just the HTML
+              const htmlMatch = result.match(/<html[^>]*>[\s\S]*<\/html>/i);
+              if (htmlMatch) {
+                htmlContent = htmlMatch[0];
+                console.log(`Retrieved HTML from Windows clipboard (${htmlMatch[0].length} bytes)`);
               } else {
-                // Use everything after the header
-                const htmlStart = result.indexOf("<");
-                if (htmlStart >= 0) {
-                  htmlContent = result.substring(htmlStart);
-                  console.log(`Retrieved raw HTML from Windows clipboard (${htmlContent.length} bytes)`);
+                // Try fragment markers (Google Docs uses these)
+                const fragmentMatch = result.match(/<!--StartFragment-->([\s\S]*?)<!--EndFragment-->/i);
+                if (fragmentMatch) {
+                  htmlContent = fragmentMatch[1];
+                  console.log(`Retrieved HTML fragment from Windows clipboard (${fragmentMatch[1].length} bytes)`);
+                } else {
+                  // Use everything after the header
+                  const htmlStart = result.indexOf("<");
+                  if (htmlStart >= 0) {
+                    htmlContent = result.substring(htmlStart);
+                    console.log(`Retrieved raw HTML from Windows clipboard (${htmlContent.length} bytes)`);
+                  }
                 }
               }
             }
+            // Cleanup
+            try { fs.unlinkSync(outputPath); } catch (e) { /* ignore */ }
+          } else {
+            console.log("No HTML output file created - clipboard may not contain HTML");
           }
+          // Cleanup script
+          try { fs.unlinkSync(scriptPath); } catch (e) { /* ignore */ }
         } catch (error: any) {
           console.log("Could not retrieve HTML from Windows clipboard:", error.message);
         }

@@ -267,34 +267,48 @@ export default async function PlainMarkdownCommand() {
           }
         }
       } else if (platform === "win32") {
-        // Windows: Use PowerShell to get HTML from clipboard
-        try {
-          const psScript = `
+        // Windows: Use PowerShell to get HTML from clipboard via temp file
+        const fs = require("fs");
+        const path = require("path");
+        const tempDir = os.tmpdir();
+        const scriptPath = path.join(tempDir, "raycast-get-clipboard-plain.ps1");
+        const outputPath = path.join(tempDir, "raycast-clipboard-output-plain.txt");
+        
+        const psScript = `
 Add-Type -AssemblyName System.Windows.Forms
-if ([System.Windows.Forms.Clipboard]::ContainsText([System.Windows.Forms.TextDataFormat]::Html)) {
-  [System.Windows.Forms.Clipboard]::GetText([System.Windows.Forms.TextDataFormat]::Html)
+$clip = [System.Windows.Forms.Clipboard]
+if ($clip::ContainsText([System.Windows.Forms.TextDataFormat]::Html)) {
+    $html = $clip::GetText([System.Windows.Forms.TextDataFormat]::Html)
+    [System.IO.File]::WriteAllText("${outputPath.replace(/\\/g, "\\\\")}", $html, [System.Text.Encoding]::UTF8)
 }
 `;
-          const result = execSync(`powershell -sta -NoProfile -Command "${psScript.replace(/"/g, '\\"').replace(/\r?\n/g, ' ')}"`, {
-            encoding: "utf-8",
+        try {
+          fs.writeFileSync(scriptPath, psScript, "utf-8");
+          try { fs.unlinkSync(outputPath); } catch (e) { /* ignore */ }
+          
+          execSync(`powershell -sta -NoProfile -ExecutionPolicy Bypass -File "${scriptPath}"`, {
             timeout: 10000,
-            maxBuffer: 10 * 1024 * 1024,
             windowsHide: true,
           });
           
-          if (result && result.trim() && result.includes("<")) {
-            const htmlMatch = result.match(/<html[^>]*>[\s\S]*<\/html>/i);
-            if (htmlMatch) {
-              htmlContent = htmlMatch[0];
-            } else {
-              const fragmentMatch = result.match(/<!--StartFragment-->([\s\S]*?)<!--EndFragment-->/i);
-              if (fragmentMatch) {
-                htmlContent = fragmentMatch[1];
+          if (fs.existsSync(outputPath)) {
+            const result = fs.readFileSync(outputPath, "utf-8");
+            if (result && result.includes("<")) {
+              const htmlMatch = result.match(/<html[^>]*>[\s\S]*<\/html>/i);
+              if (htmlMatch) {
+                htmlContent = htmlMatch[0];
               } else {
-                htmlContent = result.substring(result.indexOf("<"));
+                const fragmentMatch = result.match(/<!--StartFragment-->([\s\S]*?)<!--EndFragment-->/i);
+                if (fragmentMatch) {
+                  htmlContent = fragmentMatch[1];
+                } else {
+                  htmlContent = result.substring(result.indexOf("<"));
+                }
               }
             }
+            try { fs.unlinkSync(outputPath); } catch (e) { /* ignore */ }
           }
+          try { fs.unlinkSync(scriptPath); } catch (e) { /* ignore */ }
         } catch (error: any) {
           console.log("Could not retrieve HTML from Windows clipboard:", error.message);
         }
