@@ -145,6 +145,11 @@ The extension has been extensively tested with real-world content:
 
 ## 📥 Installation
 
+### Requirements
+- **Node.js 22+** (run `node -v` to check)
+- **npm 7+**
+- **Raycast** installed on macOS
+
 ### For Personal Use (Permanent Installation)
 
 1. **Clone this repository:**
@@ -157,6 +162,8 @@ The extension has been extensively tested with real-world content:
    ```bash
    npm install
    ```
+   
+   > ⚠️ If you see `EBADENGINE` warnings, upgrade Node.js to version 22+ using [nvm](https://github.com/nvm-sh/nvm) or download from [nodejs.org](https://nodejs.org)
 
 3. **Import into Raycast (One-Time Setup):**
    - Open **Raycast**
