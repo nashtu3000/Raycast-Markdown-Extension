@@ -523,6 +523,7 @@ function escapeHtml(text: string): string {
 }
 
 export default async function Command() {
+  console.log("\n\n🚀 [v2026.01.20-FIXED] === EXTENSION STARTED ===\n");
   try {
     // Read clipboard content
     const clipboardContent = await Clipboard.read();
@@ -630,14 +631,19 @@ export default async function Command() {
     const markdown = convertToMarkdown(cleanedHtml);
     
     console.log("Markdown preview:", markdown.substring(0, 500));
+    console.log("Markdown length:", markdown.length, "chars");
+    console.log("Contains <table>?", markdown.includes("<table>"));
+    console.log("Contains | --- |?", markdown.includes("| --- |"));
 
     // Copy Markdown back to clipboard
     await Clipboard.copy(markdown);
+    console.log("✅ Markdown copied to clipboard successfully!");
 
     // Show success message
     await showHUD("✅ Markdown copied to clipboard!");
   } catch (error) {
-    console.error("Error converting clipboard to Markdown:", error);
+    console.error("❌ [v2026.01.20-FIXED] ERROR:", error);
+    console.error("Error stack:", error instanceof Error ? error.stack : "No stack");
 
     await showToast({
       style: Toast.Style.Failure,
@@ -646,4 +652,5 @@ export default async function Command() {
         error instanceof Error ? error.message : "Unknown error occurred",
     });
   }
+  console.log("\n🏁 [v2026.01.20-FIXED] === EXTENSION FINISHED ===\n\n");
 }
