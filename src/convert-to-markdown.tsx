@@ -615,6 +615,16 @@ export default async function Command() {
       return;
     }
 
+    // TypeScript guard: htmlContent is definitely defined here
+    if (!htmlContent) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "No Content",
+        message: "No HTML content available to convert",
+      });
+      return;
+    }
+
     // Detect if this is spreadsheet content and enhance it
     let processedHtml = htmlContent;
     if (isSpreadsheetContent(htmlContent)) {
