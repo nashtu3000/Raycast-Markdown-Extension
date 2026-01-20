@@ -806,7 +806,7 @@ if ($data -and $data.GetDataPresent('HTML Format')) {
             const htmlMatch = result.match(/<html[^>]*>[\s\S]*<\/html>/i);
             if (htmlMatch) {
               htmlContent = htmlMatch[0];
-              console.log(`Retrieved HTML from Windows clipboard (${htmlContent.length} bytes)`);
+              console.log(`Retrieved HTML from Windows clipboard (${htmlMatch[0].length} bytes)`);
             } else {
               // Try to find fragment markers
               const fragmentMatch = result.match(/<!--StartFragment-->([\s\S]*?)<!--EndFragment-->/i);

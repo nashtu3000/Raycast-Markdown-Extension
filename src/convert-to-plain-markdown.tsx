@@ -105,7 +105,7 @@ function cleanHtmlLightweight(html: string): string {
   cleaned = cleaned.replace(/<colgroup[^>]*>.*?<\/colgroup>/gis, "");
   
   // Step 3: Preserve href attributes on <a> tags by using placeholder markers
-  const linkPlaceholders = [];
+  const linkPlaceholders: { marker: string; href: string }[] = [];
   let linkCounter = 0;
   
   // Replace <a href="..."> with a unique marker that won't be touched by attribute removal
