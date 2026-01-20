@@ -131,8 +131,8 @@ The extension has been extensively tested with real-world content:
 
 1. **Clone this repository:**
    ```bash
-   git clone https://github.com/nashtu3000/raycast-extension.git
-   cd raycast-extension
+   git clone https://github.com/nashtu3000/raycast-markdown-extension.git
+   cd raycast-markdown-extension
    ```
 
 2. **Install dependencies:**
@@ -146,7 +146,7 @@ The extension has been extensively tested with real-world content:
    - Click **Extensions** tab
    - Click the **⋮** menu (three dots) in the top right corner
    - Select **"Import Extension"**
-   - Navigate to your `raycast-extension` folder
+   - Navigate to your `raycast-markdown-extension` folder
    - Click **Import**
 
 4. **You're done!** 🎉 The extension is now permanently installed. You can close the terminal - it will keep working.
@@ -155,7 +155,7 @@ The extension has been extensively tested with real-world content:
 
 To share this extension with friends or colleagues:
 
-1. **Share the GitHub repository link**: `https://github.com/nashtu3000/raycast-extension`
+1. **Share the GitHub repository link**: `https://github.com/nashtu3000/raycast-markdown-extension`
 2. They follow the installation steps above
 3. That's it! No publishing to the store required for private use.
 
