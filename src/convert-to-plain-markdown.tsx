@@ -15,19 +15,34 @@ function cleanHtmlLightweight(html: string): string {
   // Step 2: Remove ALL attributes from ALL opening tags
   cleaned = cleaned.replace(/<(\w+)(\s+[^>]+)>/g, "<$1>");
   
-  // Step 3: Remove wrapper tags - run many times for deep nesting
+  // Step 3: Remove wrapper tags but preserve block structure for Turndown
+  // KEEP <p> and <br> tags OUTSIDE tables - Turndown needs them for proper spacing
+  // But REMOVE <p> tags INSIDE table cells to prevent extra newlines
+  
+  // First, clean up table cells specifically
+  cleaned = cleaned.replace(/<t([dh])>(<p>)*(.*?)(<\/p>)*<\/t\1>/gis, (match, tagType, _1, content, _2) => {
+    // Remove all <p>, </p>, <br> tags from cell content
+    let cellContent = content;
+    for (let pass = 0; pass < 5; pass++) {
+      cellContent = cellContent.replace(/<\/?p>/gi, " ");
+      cellContent = cellContent.replace(/<br\s*\/?>/gi, " ");
+      cellContent = cellContent.replace(/<\/?span>/gi, "");
+      cellContent = cellContent.replace(/<\/?font>/gi, "");
+    }
+    cellContent = cellContent.replace(/\s{2,}/g, " ").trim();
+    return `<t${tagType}>${cellContent}</t${tagType}>`;
+  });
+  
+  // Then remove inline wrappers globally (multiple passes for deep nesting)
   for (let pass = 0; pass < 10; pass++) {
-    cleaned = cleaned.replace(/<\/?p>/gi, " ");
     cleaned = cleaned.replace(/<\/?span>/gi, "");
-    cleaned = cleaned.replace(/<\/?div>/gi, "");
-    cleaned = cleaned.replace(/<br\s*\/?>/gi, " ");
+    cleaned = cleaned.replace(/<\/?font>/gi, "");
+    cleaned = cleaned.replace(/<div[^>]*>/gi, "");
+    cleaned = cleaned.replace(/<\/div>/gi, "");
   }
   
-  // Step 4: Clean up whitespace
-  cleaned = cleaned.replace(/\s{2,}/g, " ");
+  // Step 4: Clean up whitespace (but preserve table cell whitespace)
   cleaned = cleaned.replace(/>\s+</g, "><");
-  cleaned = cleaned.replace(/<td>\s*/gi, "<td>");
-  cleaned = cleaned.replace(/\s*<\/td>/gi, "</td>");
   
   // Step 5: Add table headers - find first tr in EACH table and convert its td to th
   cleaned = cleaned.replace(/<table><tbody><tr>(.*?)<\/tr>/gis, (match, firstRow) => {
