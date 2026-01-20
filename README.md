@@ -1,6 +1,6 @@
-# Clipboard to Markdown Converter
+# Markdown Converter for Raycast
 
-A powerful Raycast extension that converts rich text clipboard content from **Google Docs, Google Sheets, websites, and any other source** into clean, properly formatted Markdown.
+A powerful Raycast extension for **bidirectional conversion** between rich text and Markdown. Convert clipboard content from **Google Docs, Sheets, Word, Notion, and websites** to clean Markdown—or convert Markdown back to rich text for pasting anywhere.
 
 ## ✨ Features
 
@@ -10,8 +10,8 @@ A powerful Raycast extension that converts rich text clipboard content from **Go
 - 🔗 **Links Preserved**: All hyperlinks convert to proper Markdown syntax
 - 🧹 **Intelligent Cleaning**: Removes styling/classes while preserving structure
 - 📝 **GitHub Flavored Markdown**: Full GFM support (tables, task lists, strikethrough)
-- 🔄 **Bidirectional**: Convert HTML→Markdown AND Markdown→Rich Text
-- 🖼️ **Two Markdown Modes**: "With Media" (images kept) or "Plain" (images removed)
+- 🔄 **Bidirectional**: HTML → Markdown AND Markdown → Rich Text
+- 🖼️ **Two Modes**: Keep images or strip them for text-only output
 - 💾 **Memory Optimized**: Handles huge documents (tested with 2.5MB+ Google Docs)
 - 🎯 **Smart Processing**: Removes icon elements, Google Docs wrappers, empty tags
 - 🖥️ **Cross-Platform**: Works on both macOS and Windows
@@ -21,25 +21,25 @@ A powerful Raycast extension that converts rich text clipboard content from **Go
 
 ### Method 1: Basic Usage
 
-1. **Copy rich text** from Google Docs, a website, or any other source
+1. **Copy content** from Google Docs, a website, or any source
 2. **Open Raycast** (Cmd+Space or your configured hotkey)
-3. **Search**: Type `Convert to Markdown` or `Convert Markdown`
-4. **Choose**:
-   - `Convert to Markdown (with Media)` - Keeps images and media
-   - `Convert to Plain Markdown` - Removes all images for clean text
-   - `Convert Markdown to Rich Text` - Reverse conversion for pasting into Docs/emails
-5. **Done!** ✅ The converted content is now in your clipboard
+3. **Search**: Type `markdown` or `clipboard`
+4. **Choose your action**:
+   - `Clipboard → Markdown` — Convert with images
+   - `Clipboard → Markdown (Text Only)` — Strip images for clean text
+   - `Markdown → Rich Text` — Reverse: paste Markdown into Docs/email
+5. **Done!** ✅ Converted content is in your clipboard
 
 ### Method 2: With Hotkey (Recommended)
 
 Set up instant conversion with a keyboard shortcut:
 
-1. Open Raycast and search for `Convert to Markdown`
+1. Open Raycast and search for `Clipboard → Markdown`
 2. Press `⌘+K` to open actions
 3. Select **"Configure Command"**
-4. Assign your hotkey (e.g., `⌘+Shift+M` for with media, `⌘+Shift+P` for plain)
+4. Assign your hotkey (e.g., `⌘+Shift+M`)
 
-Now just **copy and press your hotkey** - instant Markdown conversion! ⚡
+Now just **copy and press your hotkey** — instant conversion! ⚡
 
 ## 💡 What Works
 
@@ -62,10 +62,17 @@ Now just **copy and press your hotkey** - instant Markdown conversion! ⚡
 
 ## 📋 Commands
 
-This extension installs 3 actions into Raycast:
+This extension adds 3 actions to Raycast:
 
-### 1. Convert to Markdown (with Media)
+| Command | Description |
+|---------|-------------|
+| **Clipboard → Markdown** | Convert HTML/rich text to Markdown, keeping images |
+| **Clipboard → Markdown (Text Only)** | Convert to Markdown, stripping all images |
+| **Markdown → Rich Text** | Convert Markdown to rich text for Docs, Word, email |
+
+### Clipboard → Markdown
 Converts everything including images:
+
 ```markdown
 ![Alt text](image.png)
 
@@ -74,16 +81,20 @@ Converts everything including images:
 | Data | Data |
 ```
 
-### 2. Convert to Plain Markdown
-Removes all images and media, perfect for documentation:
+### Clipboard → Markdown (Text Only)
+Strips images for clean documentation:
+
 ```markdown
 | Column 1 | Column 2 |
 | --- | --- |
 | Data | Data |
 ```
 
-### 3. Convert Markdown to Rich Text
-Converts Markdown back to rich text for pasting into Google Docs, emails, Word, and other rich text editors. Perfect for when you've written content in Markdown and need to share it in a formatted document.
+### Markdown → Rich Text
+Write in Markdown, paste as formatted text. Perfect for:
+- Pasting into Google Docs or Word
+- Composing rich emails
+- Sharing formatted content in Slack or Teams
 
 ## 🔧 Technical Details
 
@@ -196,9 +207,9 @@ Perfect for testing before using in Raycast or debugging issues. See [`TESTING.m
 ## 🐛 Troubleshooting
 
 ### Extension not appearing in Raycast?
-- Make sure `npm run dev` is running in the terminal
-- Try "Reload Extensions" in Raycast
-- Check Terminal for "ready - built extension successfully"
+- Search for `markdown` or `clipboard` in Raycast
+- Try "Reload Extensions" in Raycast (Cmd+Shift+R)
+- If developing: make sure `npm run dev` is running
 
 ### Bold/italic formatting lost?
 - ✅ **Fixed!** Now converts Google Docs inline styles (`font-weight:700`)

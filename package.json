@@ -1,8 +1,8 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "clipboard-to-markdown",
-  "title": "Clipboard to Markdown Converter",
-  "description": "Convert rich text clipboard content (from Sheets, Docs, websites) to clean Markdown",
+  "title": "Markdown Converter",
+  "description": "Convert clipboard between Markdown and rich text. Works with Google Docs, Sheets, Word, Notion, HTML, and websites. Bidirectional: HTML→Markdown and Markdown→Rich Text.",
   "icon": "icon.svg",
   "author": "alex",
   "categories": [
@@ -10,24 +10,37 @@
     "Developer Tools"
   ],
   "license": "MIT",
+  "keywords": [
+    "markdown",
+    "html",
+    "rich text",
+    "clipboard",
+    "convert",
+    "google docs",
+    "notion",
+    "word"
+  ],
   "commands": [
     {
       "name": "convert-to-markdown",
-      "title": "Convert to Markdown (with Media)",
-      "description": "Convert rich text/HTML to Markdown, keeping images and media",
-      "mode": "no-view"
+      "title": "Clipboard → Markdown",
+      "description": "Convert HTML and rich text to Markdown. Works with Google Docs, Sheets, Word, Notion, websites.",
+      "mode": "no-view",
+      "keywords": ["html", "rich text", "convert", "docs", "notion"]
     },
     {
       "name": "convert-to-plain-markdown",
-      "title": "Convert to Plain Markdown",
-      "description": "Convert rich text/HTML to Markdown, removing all images and media",
-      "mode": "no-view"
+      "title": "Clipboard → Markdown (Text Only)",
+      "description": "Convert to Markdown without images. Perfect for documentation and plain text workflows.",
+      "mode": "no-view",
+      "keywords": ["html", "rich text", "convert", "no images", "plain"]
     },
     {
       "name": "convert-markdown-to-richtext",
-      "title": "Convert Markdown to Rich Text",
-      "description": "Convert Markdown from clipboard to rich text for pasting into Docs, emails, and more",
-      "mode": "no-view"
+      "title": "Markdown → Rich Text",
+      "description": "Convert Markdown to formatted rich text for pasting into Google Docs, Word, email, Slack.",
+      "mode": "no-view",
+      "keywords": ["rich text", "format", "docs", "word", "email"]
     }
   ],
   "dependencies": {
