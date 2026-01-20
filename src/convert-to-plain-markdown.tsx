@@ -39,19 +39,67 @@ function expandColspanRowspan(html: string): string {
 }
 
 /**
+ * Converts inline font-weight styles to semantic <strong> and <b> tags
+ * Must be called BEFORE removing style attributes
+ */
+function convertInlineStylesToSemantic(html: string): string {
+  let converted = html;
+  
+  // Convert spans with font-weight:700/bold to <strong>
+  converted = converted.replace(/<span([^>]*style="[^"]*font-weight\s*:\s*(700|bold|600)[^"]*"[^>]*)>(.*?)<\/span>/gis, 
+    (match, attrs, weight, content) => {
+      // Skip if content is only <br> or whitespace - don't want <strong><br></strong>
+      if (/^(<br\s*\/?>|\s)*$/i.test(content)) {
+        return content; // Just return the br tag without wrapping
+      }
+      return `<strong>${content}</strong>`;
+    }
+  );
+  
+  // Convert spans with font-style:italic to <em>
+  converted = converted.replace(/<span([^>]*style="[^"]*font-style\s*:\s*italic[^"]*"[^>]*)>(.*?)<\/span>/gis, 
+    (match, attrs, content) => {
+      if (/^(<br\s*\/?>|\s)*$/i.test(content)) {
+        return content;
+      }
+      return `<em>${content}</em>`;
+    }
+  );
+  
+  // Also convert <b> tags to <strong> for consistency
+  // Use word boundary to avoid matching <br> tags
+  converted = converted.replace(/<b(\s|>)/gi, "<strong$1>");
+  converted = converted.replace(/<\/b>/gi, "</strong>");
+  
+  // Convert <i> tags to <em>
+  // Use word boundary to avoid matching <img>, <iframe>, etc.
+  converted = converted.replace(/<i(\s|>)/gi, "<em$1>");
+  converted = converted.replace(/<\/i>/gi, "</em>");
+  
+  return converted;
+}
+
+/**
  * Lightweight HTML cleaning using regex for large documents
  * EXACT SAME as convert-to-markdown.tsx
  */
 function cleanHtmlLightweight(html: string): string {
   let cleaned = html;
   
-  // Step 0: Expand colspan/rowspan BEFORE removing attributes
+  // Step -1: Remove Google Docs wrapper elements at the very beginning
+  cleaned = cleaned.replace(/^(<meta[^>]*>)+/gi, "");
+  cleaned = cleaned.replace(/^<b[^>]*docs-internal-guid[^>]*>/i, "");
+  
+  // Step 0: Convert inline styles to semantic tags FIRST (before removing attributes)
+  cleaned = convertInlineStylesToSemantic(cleaned);
+  
+  // Step 1: Expand colspan/rowspan BEFORE removing attributes
   cleaned = expandColspanRowspan(cleaned);
   
-  // Step 1: Remove colgroup
+  // Step 2: Remove colgroup
   cleaned = cleaned.replace(/<colgroup[^>]*>.*?<\/colgroup>/gis, "");
   
-  // Step 2: Preserve href attributes on <a> tags by using placeholder markers
+  // Step 3: Preserve href attributes on <a> tags by using placeholder markers
   const linkPlaceholders = [];
   let linkCounter = 0;
   
@@ -63,10 +111,10 @@ function cleanHtmlLightweight(html: string): string {
     return `<a>${marker}`;
   });
   
-  // Now remove ALL other attributes (won't touch our ___LINK_X___ markers)
+  // Step 4: Now remove ALL other attributes (won't touch our ___LINK_X___ markers)
   cleaned = cleaned.replace(/<(\w+)(\s+[^>]+)>/g, "<$1>");
   
-  // Restore links with href attributes after the marker
+  // Step 5: Restore links with href attributes after the marker
   linkPlaceholders.forEach(({ marker, href }) => {
     cleaned = cleaned.replace(`<a>${marker}`, `<a href="${href}">`);
   });
@@ -134,8 +182,11 @@ function postProcessMarkdown(markdown: string): string {
   // Fix 6: Clean up excessive blank lines (more than 3 consecutive)
   fixed = fixed.replace(/\n{4,}/g, "\n\n\n");
   
-  // Fix 7: Remove trailing whitespace on lines
-  fixed = fixed.replace(/[ \t]+$/gm, "");
+  // Fix 7: Remove trailing whitespace on lines (BUT preserve double-space line breaks)
+  // Markdown uses "  \n" (two spaces + newline) for line breaks
+  // Remove 3+ spaces/tabs, or single space/tab, but NOT exactly 2 spaces
+  fixed = fixed.replace(/[ \t]{3,}$/gm, "  "); // 3+ spaces → 2 spaces
+  fixed = fixed.replace(/[ \t]{1}$/gm, ""); // Single space/tab → remove (won't match 2 spaces)
   
   return fixed.trim();
 }
