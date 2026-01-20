@@ -10,7 +10,8 @@ A powerful Raycast extension that converts rich text clipboard content from **Go
 - 🔗 **Links Preserved**: All hyperlinks convert to proper Markdown syntax
 - 🧹 **Intelligent Cleaning**: Removes styling/classes while preserving structure
 - 📝 **GitHub Flavored Markdown**: Full GFM support (tables, task lists, strikethrough)
-- 🖼️ **Two Modes**: "With Media" (images ignored) or "Plain" (images removed)
+- 🔄 **Bidirectional**: Convert HTML→Markdown AND Markdown→Rich Text
+- 🖼️ **Two Markdown Modes**: "With Media" (images kept) or "Plain" (images removed)
 - 💾 **Memory Optimized**: Handles huge documents (tested with 2.5MB+ Google Docs)
 - 🎯 **Smart Processing**: Removes icon elements, Google Docs wrappers, empty tags
 - 🖥️ **Cross-Platform**: Works on both macOS and Windows
@@ -22,11 +23,12 @@ A powerful Raycast extension that converts rich text clipboard content from **Go
 
 1. **Copy rich text** from Google Docs, a website, or any other source
 2. **Open Raycast** (Cmd+Space or your configured hotkey)
-3. **Search**: Type `Convert to Markdown`
+3. **Search**: Type `Convert to Markdown` or `Convert Markdown`
 4. **Choose**:
    - `Convert to Markdown (with Media)` - Keeps images and media
    - `Convert to Plain Markdown` - Removes all images for clean text
-5. **Done!** ✅ The Markdown is now in your clipboard
+   - `Convert Markdown to Rich Text` - Reverse conversion for pasting into Docs/emails
+5. **Done!** ✅ The converted content is now in your clipboard
 
 ### Method 2: With Hotkey (Recommended)
 
@@ -60,7 +62,9 @@ Now just **copy and press your hotkey** - instant Markdown conversion! ⚡
 
 ## 📋 Commands
 
-### Convert to Markdown (with Media)
+This extension installs 3 actions into Raycast:
+
+### 1. Convert to Markdown (with Media)
 Converts everything including images:
 ```markdown
 ![Alt text](image.png)
@@ -70,13 +74,16 @@ Converts everything including images:
 | Data | Data |
 ```
 
-### Convert to Plain Markdown
+### 2. Convert to Plain Markdown
 Removes all images and media, perfect for documentation:
 ```markdown
 | Column 1 | Column 2 |
 | --- | --- |
 | Data | Data |
 ```
+
+### 3. Convert Markdown to Rich Text
+Converts Markdown back to rich text for pasting into Google Docs, emails, Word, and other rich text editors. Perfect for when you've written content in Markdown and need to share it in a formatted document.
 
 ## 🔧 Technical Details
 
