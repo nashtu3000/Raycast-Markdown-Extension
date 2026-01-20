@@ -3,6 +3,42 @@ import TurndownService from "turndown";
 import { gfm } from "turndown-plugin-gfm";
 
 /**
+ * Lightweight HTML cleaning using regex for large documents
+ * EXACT SAME as convert-to-markdown.tsx
+ */
+function cleanHtmlLightweight(html: string): string {
+  let cleaned = html;
+  
+  // Step 1: Remove colgroup
+  cleaned = cleaned.replace(/<colgroup[^>]*>.*?<\/colgroup>/gis, "");
+  
+  // Step 2: Remove ALL attributes from ALL opening tags
+  cleaned = cleaned.replace(/<(\w+)(\s+[^>]+)>/g, "<$1>");
+  
+  // Step 3: Remove wrapper tags - run many times for deep nesting
+  for (let pass = 0; pass < 10; pass++) {
+    cleaned = cleaned.replace(/<\/?p>/gi, " ");
+    cleaned = cleaned.replace(/<\/?span>/gi, "");
+    cleaned = cleaned.replace(/<\/?div>/gi, "");
+    cleaned = cleaned.replace(/<br\s*\/?>/gi, " ");
+  }
+  
+  // Step 4: Clean up whitespace
+  cleaned = cleaned.replace(/\s{2,}/g, " ");
+  cleaned = cleaned.replace(/>\s+</g, "><");
+  cleaned = cleaned.replace(/<td>\s*/gi, "<td>");
+  cleaned = cleaned.replace(/\s*<\/td>/gi, "</td>");
+  
+  // Step 5: Add table headers - find first tr in EACH table and convert its td to th
+  cleaned = cleaned.replace(/<table><tbody><tr>(.*?)<\/tr>/gis, (match, firstRow) => {
+    const headerRow = firstRow.replace(/<td>/gi, "<th>").replace(/<\/td>/gi, "</th>");
+    return `<table><thead><tr>${headerRow}</tr></thead><tbody>`;
+  });
+  
+  return cleaned.trim();
+}
+
+/**
  * Removes all image and media tags from Markdown
  */
 function removeMediaFromMarkdown(markdown: string): string {
@@ -81,16 +117,10 @@ export default async function PlainMarkdownCommand() {
       .replace(/<audio[^>]*>.*?<\/audio>/gis, "")
       .replace(/<iframe[^>]*>.*?<\/iframe>/gis, "");
     
-    // Process the HTML (simplified inline conversion)
-    const htmlSize = htmlContent.length;
-    let cleaned = htmlContent;
-    
-    // Lightweight cleaning for large docs
-    if (htmlSize > 300 * 1024) {
-      cleaned = cleaned
-        .replace(/\s+(style|class|id|dir|width)="[^"]*"/gi, "")
-        .replace(/<div[^>]*>/gi, "").replace(/<\/div>/gi, "\n");
-    }
+    // Use the SAME cleaning logic as convert-to-markdown.tsx
+    console.log(`[Plain Markdown] Processing HTML: ${(htmlContent.length / 1024).toFixed(1)} KB`);
+    const cleaned = cleanHtmlLightweight(htmlContent);
+    console.log(`[Plain Markdown] Cleaned HTML sample:`, cleaned.substring(0, 200));
     
     // Convert to Markdown
     const turndownService = new TurndownService({
@@ -102,6 +132,8 @@ export default async function PlainMarkdownCommand() {
     turndownService.use(gfm);
     
     const markdown = turndownService.turndown(cleaned);
+    console.log(`[Plain Markdown] Generated ${markdown.length} chars, has tables: ${markdown.includes("| --- |")}`);
+    
     const cleanedMarkdown = removeMediaFromMarkdown(markdown);
     
     await Clipboard.copy(cleanedMarkdown);
