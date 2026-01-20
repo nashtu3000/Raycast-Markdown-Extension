@@ -361,6 +361,12 @@ function cleanHtmlLightweight(html: string): string {
   console.log("Running lightweight cleaning...");
   let cleaned = html;
   
+  // Step -2: Remove icon elements (Font Awesome, Material Icons, etc.)
+  // These are empty <i> or <span> tags with icon classes, no text content
+  cleaned = cleaned.replace(/<i[^>]*class="[^"]*fa[^"]*"[^>]*><\/i>/gi, "");
+  cleaned = cleaned.replace(/<i[^>]*class="[^"]*icon[^"]*"[^>]*><\/i>/gi, "");
+  cleaned = cleaned.replace(/<span[^>]*class="[^"]*icon[^"]*"[^>]*><\/span>/gi, "");
+  
   // Step -1: Remove Google Docs wrapper elements at the very beginning
   // Google Docs adds meta tags and wraps in <b style="font-weight:normal;" id="docs-internal-guid-...">
   cleaned = cleaned.replace(/^(<meta[^>]*>)+/gi, "");

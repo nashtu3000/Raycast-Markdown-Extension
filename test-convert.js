@@ -73,6 +73,11 @@ function expandColspanRowspan(html) {
 function cleanHtmlLightweight(html) {
   let cleaned = html;
   
+  // Remove icon elements (Font Awesome, Material Icons, etc.)
+  cleaned = cleaned.replace(/<i[^>]*class="[^"]*fa[^"]*"[^>]*><\/i>/gi, "");
+  cleaned = cleaned.replace(/<i[^>]*class="[^"]*icon[^"]*"[^>]*><\/i>/gi, "");
+  cleaned = cleaned.replace(/<span[^>]*class="[^"]*icon[^"]*"[^>]*><\/span>/gi, "");
+  
   // Remove Google Docs wrapper elements at the very beginning
   cleaned = cleaned.replace(/^(<meta[^>]*>)+/gi, "");
   cleaned = cleaned.replace(/^<b[^>]*docs-internal-guid[^>]*>/i, "");

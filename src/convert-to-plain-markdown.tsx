@@ -86,6 +86,11 @@ function convertInlineStylesToSemantic(html: string): string {
 function cleanHtmlLightweight(html: string): string {
   let cleaned = html;
   
+  // Step -2: Remove icon elements (Font Awesome, Material Icons, etc.)
+  cleaned = cleaned.replace(/<i[^>]*class="[^"]*fa[^"]*"[^>]*><\/i>/gi, "");
+  cleaned = cleaned.replace(/<i[^>]*class="[^"]*icon[^"]*"[^>]*><\/i>/gi, "");
+  cleaned = cleaned.replace(/<span[^>]*class="[^"]*icon[^"]*"[^>]*><\/span>/gi, "");
+  
   // Step -1: Remove Google Docs wrapper elements at the very beginning
   cleaned = cleaned.replace(/^(<meta[^>]*>)+/gi, "");
   cleaned = cleaned.replace(/^<b[^>]*docs-internal-guid[^>]*>/i, "");
