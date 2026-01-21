@@ -1,6 +1,14 @@
 # Markdown Converter for Raycast
 
+**v1.0 - Now fully working on macOS and Windows!** 🎉
+
 A powerful Raycast extension for **bidirectional conversion** between rich text and Markdown. Convert clipboard content from **Google Docs, Sheets, Word, Notion, and websites** to clean Markdown—or convert Markdown back to rich text for pasting anywhere.
+
+## 🖥️ Platform Support
+
+- ✅ **macOS**: Fully supported via AppleScript clipboard access
+- ✅ **Windows**: Fully supported via PowerShell with proper UTF-8 encoding
+- ✅ **Raycast Windows Beta**: Works perfectly in the new Windows version of Raycast
 
 ## ✨ Features
 
@@ -150,6 +158,8 @@ The extension has been extensively tested with real-world content:
 - **npm 7+**
 - **Raycast** — macOS or Windows (beta)
 
+> 🎉 **v1.0 is production-ready!** Tested and working on both macOS and Windows with full UTF-8 support for all languages including emojis, Romanian, and other special characters.
+
 ### For Personal Use (Permanent Installation)
 
 1. **Clone this repository:**
@@ -236,6 +246,11 @@ Perfect for testing before using in Raycast or debugging issues. See [`TESTING.m
 
 ### Icon garbage in list items?
 - ✅ **Fixed!** Font Awesome and icon elements automatically removed
+
+### Garbled characters on Windows (ș, ț, ă, emojis)?
+- ✅ **Fixed in v1.0!** Proper UTF-8 encoding now handles all languages
+- Supports Romanian diacritics, emojis, and all Unicode characters
+- If issues persist, make sure you're on the latest version: `git pull && npm run build`
 
 ## 📄 License
 
