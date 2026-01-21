@@ -361,6 +361,10 @@ function cleanHtmlLightweight(html: string): string {
   console.log("Running lightweight cleaning...");
   let cleaned = html;
   
+  // Step -3: Remove HTML comments (Google Sheets CSS, MS Office metadata, etc.)
+  // Preserve StartFragment/EndFragment markers for Windows clipboard
+  cleaned = cleaned.replace(/<!--(?!StartFragment)(?!EndFragment)[^]*?-->/g, "");
+  
   // Step -2: Remove icon elements (Font Awesome, Material Icons, etc.)
   // These are empty <i> or <span> tags with icon classes, no text content
   cleaned = cleaned.replace(/<i[^>]*class="[^"]*fa[^"]*"[^>]*><\/i>/gi, "");

@@ -86,6 +86,10 @@ function convertInlineStylesToSemantic(html: string): string {
 function cleanHtmlLightweight(html: string): string {
   let cleaned = html;
   
+  // Step -3: Remove HTML comments (Google Sheets CSS, MS Office metadata, etc.)
+  // Preserve StartFragment/EndFragment markers for Windows clipboard
+  cleaned = cleaned.replace(/<!--(?!StartFragment)(?!EndFragment)[^]*?-->/g, "");
+  
   // Step -2: Remove icon elements (Font Awesome, Material Icons, etc.)
   cleaned = cleaned.replace(/<i[^>]*class="[^"]*fa[^"]*"[^>]*><\/i>/gi, "");
   cleaned = cleaned.replace(/<i[^>]*class="[^"]*icon[^"]*"[^>]*><\/i>/gi, "");
